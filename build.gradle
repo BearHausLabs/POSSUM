@@ -105,6 +105,35 @@ shadowJar{
     archiveClassifier.set("")
 }
 
+// Fix task dependencies for shadowJar to avoid conflicts with Spring Boot tasks
+tasks.named('bootDistZip') {
+    dependsOn shadowJar, copyRuntimeJars
+}
+tasks.named('bootDistTar') {
+    dependsOn shadowJar, copyRuntimeJars
+}
+tasks.named('bootStartScripts') {
+    dependsOn shadowJar, copyRuntimeJars
+}
+tasks.named('startShadowScripts') {
+    dependsOn bootJar, copyRuntimeJars
+}
+tasks.named('distZip') {
+    dependsOn copyRuntimeJars
+}
+tasks.named('distTar') {
+    dependsOn copyRuntimeJars
+}
+tasks.named('startScripts') {
+    dependsOn copyRuntimeJars
+}
+tasks.named('shadowDistZip') {
+    dependsOn copyRuntimeJars
+}
+tasks.named('shadowDistTar') {
+    dependsOn copyRuntimeJars
+}
+
 bootJar {
     archiveClassifier.set("")
     manifest {

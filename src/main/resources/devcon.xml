@@ -943,4 +943,69 @@
     <!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
 </JposEntry>
 
+<!-- New Device Entries for POSSUM Extension -->
+
+<!-- POSKeyboard -->
+<JposEntry logicalName="POSKeyboard">
+    <creation factoryClass="com.vendor.jpos.POSKeyboardServiceInstanceFactory" serviceClass="com.vendor.jpos.POSKeyboardService"/>
+    <vendor name="Generic" url="http://www.vendor.com"/>
+    <jpos category="POSKeyboard" version="1.14"/>
+    <product description="POS Keyboard Service" name="POSKeyboard" url="http://www.vendor.com"/>
+    <prop name="deviceBus" type="String" value="USB"/>
+    <prop name="deviceCompatibility" type="String" value="1.14"/>
+</JposEntry>
+
+<!-- ToneIndicator -->
+<JposEntry logicalName="ToneIndicator">
+    <creation factoryClass="com.vendor.jpos.ToneIndicatorServiceInstanceFactory" serviceClass="com.vendor.jpos.ToneIndicatorService"/>
+    <vendor name="Generic" url="http://www.vendor.com"/>
+    <jpos category="ToneIndicator" version="1.14"/>
+    <product description="Tone Indicator Service" name="ToneIndicator" url="http://www.vendor.com"/>
+    <prop name="deviceBus" type="String" value="USB"/>
+</JposEntry>
+
+<!-- KeyLock -->
+<JposEntry logicalName="KeyLock">
+    <creation factoryClass="com.vendor.jpos.KeylockServiceInstanceFactory" serviceClass="com.vendor.jpos.KeylockService"/>
+    <vendor name="Generic" url="http://www.vendor.com"/>
+    <jpos category="Keylock" version="1.14"/>
+    <product description="Key Lock Service" name="Keylock" url="http://www.vendor.com"/>
+    <prop name="deviceBus" type="String" value="USB"/>
+</JposEntry>
+
+<JposEntry logicalName="LineDisplay1">
+	<creation factoryClass="com.ibm.jpos.services.IBMJposServiceInstanceFactory" serviceClass="com.ibm.jpos.services.LineDisplayAnop0"/>
+	<vendor name="Toshiba" url="http://www.toshibagcs.com"/>
+	<jpos category="LineDisplay" version="v1.14.10L35 2022-07-14"/>
+	<product description="LineDisplay" name="LineDisplay" url="http://www.toshibagcs.com"/>
+
+	<prop name="com.ibm.posj.bus.hid.usagePage" value="0xff45" type="String"/>
+	<prop name="abstractionClass" value="com.ibm.jpos.services.LineDisplayAnop0" type="String"/>
+	<prop name="impClass" value="com.ibm.jpos.services.sdi.LineDisplayServiceImp" type="String"/>
+	<prop name="com.ibm.jpos.tools.autoconfig.devcat.DevCatAutoConfig.devCatNumber" value="1" type="String"/>
+	<prop name="deviceBus" value="HID" type="String"/>
+	<prop name="com.ibm.jpos.services.sdi.config.LineDisplay.CharacterSetASCIIBehavior" value="858" type="String"/>
+	<prop name="com.ibm.posj.bus.hid.usageId" value="0x2200" type="String"/>
+	<prop name="com.ibm.posj.bus.deviceNumber" value="0" type="String"/>
+</JposEntry>
+
+<JposEntry logicalName="POSKeyboard1">
+        <creation factoryClass="com.ibm.jpos.services.IBMJposServiceInstanceFactory" serviceClass="com.ibm.jpos.services.IBMPOSKeyboard"/>
+        <vendor name="Toshiba" url="http://www.toshibagcs.com"/>
+        <jpos category="POSKeyboard" version="v1.14.10L35 2022-07-14"/>
+        <product description="IBM Modular ANPOS USB keyboard (Non-Boot mode)" name="Modular ANPOS keyboard" url="http://www.toshibagcs.com"/>
+
+        <!--Other non JavaPOS required property (mostly vendor properties and bus specific properties i.e. RS232 )-->
+        <prop name="com.ibm.posj.bus.hid.usageId" type="String" value="0x1500"/>
+        <prop name="deviceBus" type="String" value="HID"/>
+        <prop name="abstractionClass" type="String" value="com.ibm.jpos.services.IBMPOSKeyboard"/>
+        <prop name="impClass" type="String" value="com.ibm.jpos.services.sdi.POSKeyboardServiceImp"/>
+        <prop name="com.ibm.posj.bus.hid.usagePage" type="String" value="0xff45"/>
+        <prop name="com.ibm.jpos.tools.autoconfig.devcat.DevCatAutoConfig.devCatNumber" type="String" value="1"/>
+        <prop name="com.ibm.posj.bus.deviceNumber" type="String" value="0"/>
+		<prop name="com.ibm.jpos.sdi.config.POSKeyboard.Click" type="Byte" value="0x01"/>
+		
+</JposEntry>
+
+
 </JposEntries>

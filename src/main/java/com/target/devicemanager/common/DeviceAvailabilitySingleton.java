@@ -2,10 +2,13 @@ package com.target.devicemanager.common;
 
 import com.target.devicemanager.components.cashdrawer.CashDrawerManager;
 import com.target.devicemanager.components.check.MicrManager;
+import com.target.devicemanager.components.keylock.KeyLockManager;
 import com.target.devicemanager.components.linedisplay.LineDisplayManager;
+import com.target.devicemanager.components.poskeyboard.POSKeyboardManager;
 import com.target.devicemanager.components.printer.PrinterManager;
 import com.target.devicemanager.components.scale.ScaleManager;
 import com.target.devicemanager.components.scanner.ScannerManager;
+import com.target.devicemanager.components.toneindicator.ToneIndicatorManager;
 
 public class DeviceAvailabilitySingleton {
 
@@ -19,6 +22,9 @@ public class DeviceAvailabilitySingleton {
     private PrinterManager printerManager = null;
     private ScaleManager scaleManager = null;
     private ScannerManager scannerManager = null;
+    private POSKeyboardManager posKeyboardManager = null;
+    private ToneIndicatorManager toneIndicatorManager = null;
+    private KeyLockManager keyLockManager = null;
 
     private DeviceAvailabilitySingleton() {
         // do nothing at the moment
@@ -74,5 +80,29 @@ public class DeviceAvailabilitySingleton {
 
     public void setScannerManager(ScannerManager scannerManager) {
         this.scannerManager = scannerManager;
+    }
+
+    public POSKeyboardManager getPOSKeyboardManager() {
+        return posKeyboardManager;
+    }
+
+    public void setPOSKeyboardManager(POSKeyboardManager posKeyboardManager) {
+        this.posKeyboardManager = posKeyboardManager;
+    }
+
+    public ToneIndicatorManager getToneIndicatorManager() {
+        return toneIndicatorManager;
+    }
+
+    public void setToneIndicatorManager(ToneIndicatorManager toneIndicatorManager) {
+        this.toneIndicatorManager = toneIndicatorManager;
+    }
+
+    public KeyLockManager getKeyLockManager() {
+        return keyLockManager;
+    }
+
+    public void setKeyLockManager(KeyLockManager keyLockManager) {
+        this.keyLockManager = keyLockManager;
     }
 }
