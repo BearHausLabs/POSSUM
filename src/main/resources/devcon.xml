@@ -953,4 +953,14 @@
     <prop name="deviceBus" type="String" value="USB"/>
 </JposEntry>
 
+<JposEntry logicalName="MSR">
+    <creation factoryClass="com.ncr.retail.jpos.NCRJposServiceInstanceFactory" serviceClass="com.ncr.retail.jpos.services.msr.MSRService"/>
+    <vendor name="NCR" url="http://www.ncr.com"/>
+    <jpos category="MSR" version="1.14"/>
+    <product description="NCR Magnetic Stripe Reader" name="NCR MSR" url="http://www.ncr.com"/>
+
+    <!--Device-specific properties - update deviceBus and vendor properties for your hardware-->
+    <prop name="deviceBus" type="String" value="USB"/>
+</JposEntry>
+
 </JposEntries>

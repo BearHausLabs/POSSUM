@@ -224,6 +224,13 @@ public class DeviceAvailabilityService {
                     log.failure("Failed to Connect to " + devName, 1, null);
                 }
                 break;
+            case "msr":
+                if(deviceAvailabilitySingleton.getMsrManager() != null) {
+                    healthStatus = deviceAvailabilitySingleton.getMsrManager().getStatus().getHealthStatus();
+                } else {
+                    log.failure("Failed to Connect to " + devName, 1, null);
+                }
+                break;
             default:
                 log.failure("Not a known device: " + devName, 1, null);
         }
@@ -280,6 +287,9 @@ public class DeviceAvailabilityService {
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getPosKeyboardManager() != null) {
             responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getPosKeyboardManager().getHealth());
+        }
+        if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMsrManager() != null) {
+            responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMsrManager().getHealth());
         }
         return ResponseEntity.ok(responseList);
     }

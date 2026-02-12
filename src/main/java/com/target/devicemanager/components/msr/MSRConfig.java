@@ -1,0 +1,53 @@
+package com.target.devicemanager.components.msr;
+
+import com.target.devicemanager.common.*;
+import com.target.devicemanager.components.msr.simulator.SimulatedJposMSR;
+import com.target.devicemanager.configuration.ApplicationConfig;
+import jpos.MSR;
+import jpos.config.JposEntryRegistry;
+import jpos.loader.JposServiceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Phaser;
+import java.util.concurrent.locks.ReentrantLock;
+
+@Configuration
+class MSRConfig {
+    private final SimulatedJposMSR simulatedMSR;
+    private final ApplicationConfig applicationConfig;
+
+    @Autowired
+    MSRConfig(ApplicationConfig applicationConfig) {
+        this.applicationConfig = applicationConfig;
+        this.simulatedMSR = new SimulatedJposMSR();
+    }
+
+    @Bean
+    public MSRManager getMSRManager() {
+        DynamicDevice<? extends MSR> dynamicMSR;
+        JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+
+        if (applicationConfig.IsSimulationMode()) {
+            dynamicMSR = new SimulatedDynamicDevice<>(simulatedMSR, new DevicePower(), new DeviceConnector<>(simulatedMSR, deviceRegistry));
+        } else {
+            MSR msr = new MSR();
+            dynamicMSR = new DynamicDevice<>(msr, new DevicePower(), new DeviceConnector<>(msr, deviceRegistry));
+        }
+
+        MSRManager msrManager = new MSRManager(
+                new MSRDevice(
+                        new MSRDeviceListener(new EventSynchronizer(new Phaser(1))),
+                        dynamicMSR),
+                new ReentrantLock());
+
+        DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().setMsrManager(msrManager);
+        return msrManager;
+    }
+
+    @Bean
+    SimulatedJposMSR getSimulatedMSR() {
+        return simulatedMSR;
+    }
+}
