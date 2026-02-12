@@ -1,0 +1,40 @@
+[Unit]
+Description=Allows URSA Retail Suite to connect to POS peripherals via JavaPOS. Powered by POSSUM.
+Documentation=https://github.com/user/POSSUM
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/target/possum
+ExecStart=/opt/target/possum/devicestarter.sh
+ExecStop=/bin/kill -TERM $MAINPID
+
+# Environment
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=POSSUM_LOG_PATH=/var/log/target/possum
+Environment=JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+Environment=PATH=/usr/lib/jvm/java-17-openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ursa-javapos
+
+# Security
+NoNewPrivileges=false
+ProtectSystem=false
+
+# Resource limits
+LimitNOFILE=65536
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
