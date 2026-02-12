@@ -17,6 +17,7 @@ public class DeviceConnector<T extends BaseJposControl> {
     private final JposEntryRegistry deviceRegistry;
     private final String preferredLogicalName;
     private final boolean autoAdapt;
+    private final boolean skipClaim;
     private String connectedDeviceName;
     private static final int CLAIM_TIMEOUT_IN_MSEC = 30000;
     private final int RETRY_REGISTRY_LOAD = 5;
@@ -25,11 +26,17 @@ public class DeviceConnector<T extends BaseJposControl> {
 
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry) {
-        this(device, deviceRegistry, null, null, true);
+        this(device, deviceRegistry, null, null, true, false);
     }
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry, AbstractMap.SimpleEntry<String, String> customFilter) {
-        this(device, deviceRegistry, customFilter, null, true);
+        this(device, deviceRegistry, customFilter, null, true, false);
+    }
+
+    public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
+                           AbstractMap.SimpleEntry<String, String> customFilter,
+                           String preferredLogicalName, boolean autoAdapt) {
+        this(device, deviceRegistry, customFilter, preferredLogicalName, autoAdapt, false);
     }
 
     /**
@@ -40,10 +47,11 @@ public class DeviceConnector<T extends BaseJposControl> {
      * @param customFilter     Optional filter for device type (e.g., Flatbed vs HandScanner)
      * @param preferredLogicalName  Explicit logical name from possum-config.yml (null = auto-discover)
      * @param autoAdapt        If true and preferred name fails, fall back to auto-discovery
+     * @param skipClaim        If true, skip claim/release for shared devices (e.g., Keylock)
      */
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
                            AbstractMap.SimpleEntry<String, String> customFilter,
-                           String preferredLogicalName, boolean autoAdapt) {
+                           String preferredLogicalName, boolean autoAdapt, boolean skipClaim) {
         if (device == null) {
             throw new IllegalArgumentException("device cannot be null");
         }
@@ -55,6 +63,7 @@ public class DeviceConnector<T extends BaseJposControl> {
         this.deviceRegistry = deviceRegistry;
         this.preferredLogicalName = preferredLogicalName;
         this.autoAdapt = autoAdapt;
+        this.skipClaim = skipClaim;
         this.connectedDeviceName = getDefaultDeviceName();
     }
 
@@ -93,6 +102,10 @@ public class DeviceConnector<T extends BaseJposControl> {
         return this.connectedDeviceName;
     }
 
+    boolean isSkipClaim() {
+        return this.skipClaim;
+    }
+
     private void clearDeviceCache() {
         synchronized (device) {
             try {
@@ -100,10 +113,12 @@ public class DeviceConnector<T extends BaseJposControl> {
             } catch (Exception exception) {
                 log.failure("failed to disable device '" + getDefaultDeviceName() + "'" + exception, 1, exception);
             }
-            try {
-                device.release();
-            } catch (Exception exception) {
-                log.failure("failed to release device '" + getDefaultDeviceName() + "'" + exception, 1, exception);
+            if (!skipClaim) {
+                try {
+                    device.release();
+                } catch (Exception exception) {
+                    log.failure("failed to release device '" + getDefaultDeviceName() + "'" + exception, 1, exception);
+                }
             }
             try {
                 device.close();
@@ -121,11 +136,13 @@ public class DeviceConnector<T extends BaseJposControl> {
                     log.failure("failed to open " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
                     return false;
                 }
-                try {
-                    device.claim(CLAIM_TIMEOUT_IN_MSEC);
-                } catch (JposException jposException){
-                    log.failure("failed to claim " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
-                    return false;
+                if (!skipClaim) {
+                    try {
+                        device.claim(CLAIM_TIMEOUT_IN_MSEC);
+                    } catch (JposException jposException){
+                        log.failure("failed to claim " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
+                        return false;
+                    }
                 }
                 //this is a test, some devices wont signal connected status until enabled
                 //then disable to put it back in the same state
@@ -142,7 +159,7 @@ public class DeviceConnector<T extends BaseJposControl> {
                     return false;
                 }
                 this.connectedDeviceName = configName;
-                log.success("successfully connected " + configName, 9);
+                log.success("successfully connected " + configName + (skipClaim ? " (claimless)" : ""), 9);
                 return true;
             }
     }

@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Profile;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 @Profile({"local", "dev", "prod"})
 public class KeylockDevice implements StatusUpdateListener {
@@ -26,6 +27,7 @@ public class KeylockDevice implements StatusUpdateListener {
     private boolean areListenersAttached;
     private final ReentrantLock connectLock;
     private boolean isLocked = false;
+    private Consumer<KeylockPosition> positionChangeCallback;
     private static final Logger LOGGER = LoggerFactory.getLogger(KeylockDevice.class);
     private static final StructuredEventLogger log = StructuredEventLogger.of("Keylock", "KeylockDevice", LOGGER);
 
@@ -130,6 +132,14 @@ public class KeylockDevice implements StatusUpdateListener {
     }
 
     /**
+     * Sets a callback to be invoked whenever the keylock position changes.
+     * Used by KeylockManager to broadcast SSE events.
+     */
+    public void setPositionChangeCallback(Consumer<KeylockPosition> callback) {
+        this.positionChangeCallback = callback;
+    }
+
+    /**
      * Disconnects the keylock device
      */
     public void disconnect() {
@@ -176,9 +186,25 @@ public class KeylockDevice implements StatusUpdateListener {
 
     /**
      * Returns the current key position as a KeylockPosition enum.
+     * Queries the device directly for the live position.
      */
     public KeylockPosition getKeyPosition() {
-        return mapPositionToEnum(currentPosition);
+        int livePosition = currentPosition; // fallback to cached value
+
+        // Read live position directly from the device
+        if (dynamicKeylock.isConnected()) {
+            Keylock keylock;
+            synchronized (keylock = dynamicKeylock.getDevice()) {
+                try {
+                    livePosition = keylock.getKeyPosition();
+                    currentPosition = livePosition;
+                } catch (JposException jposException) {
+                    log.failure("Failed to read live key position, using cached value", 17, jposException);
+                }
+            }
+        }
+
+        return mapPositionToEnum(livePosition);
     }
 
     /**
@@ -222,6 +248,7 @@ public class KeylockDevice implements StatusUpdateListener {
     public void statusUpdateOccurred(StatusUpdateEvent statusUpdateEvent) {
         int status = statusUpdateEvent.getStatus();
         log.success("Keylock statusUpdateOccurred(): " + status, 1);
+        KeylockPosition newPosition = null;
         switch(status) {
             case JposConst.JPOS_SUE_POWER_OFF:
             case JposConst.JPOS_SUE_POWER_OFF_OFFLINE:
@@ -236,17 +263,29 @@ public class KeylockDevice implements StatusUpdateListener {
             case KeylockConst.LOCK_KP_LOCK:
                 log.success("Key position: LOCKED", 1);
                 currentPosition = KeylockConst.LOCK_KP_LOCK;
+                newPosition = KeylockPosition.LOCKED;
                 break;
             case KeylockConst.LOCK_KP_NORM:
                 log.success("Key position: NORMAL", 1);
                 currentPosition = KeylockConst.LOCK_KP_NORM;
+                newPosition = KeylockPosition.NORMAL;
                 break;
             case KeylockConst.LOCK_KP_SUPR:
                 log.success("Key position: SUPERVISOR", 1);
                 currentPosition = KeylockConst.LOCK_KP_SUPR;
+                newPosition = KeylockPosition.SUPERVISOR;
                 break;
             default:
+                log.success("Keylock unhandled status: " + status + " (0x" + Integer.toHexString(status) + ")", 1);
                 break;
+        }
+        // Notify SSE subscribers of position change
+        if (newPosition != null && positionChangeCallback != null) {
+            try {
+                positionChangeCallback.accept(newPosition);
+            } catch (Exception e) {
+                log.failure("Failed to notify position change callback", 5, e);
+            }
         }
     }
 

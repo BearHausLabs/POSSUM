@@ -40,7 +40,7 @@ class KeylockConfig {
 
         } else {
             Keylock keylock = new Keylock();
-            dynamicKeylock = new DynamicDevice<>(keylock, new DevicePower(), new DeviceConnector<>(keylock, deviceRegistry, null, preferred, autoAdapt));
+            dynamicKeylock = new DynamicDevice<>(keylock, new DevicePower(), new DeviceConnector<>(keylock, deviceRegistry, null, preferred, autoAdapt, true));
         }
 
         KeylockManager keylockManager = new KeylockManager(

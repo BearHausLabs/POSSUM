@@ -59,11 +59,13 @@ public class DynamicDevice<DEVICE extends BaseJposControl> {
 
     public void disconnect() {
         synchronized (device) {
-            try {
-                device.release();
-                log.success(getDeviceName() + " Released", 5);
-            } catch (JposException jposException) {
-                log.failure(getDeviceName() + " Release failed " + jposException.getMessage(), 5, jposException);
+            if (!deviceConnector.isSkipClaim()) {
+                try {
+                    device.release();
+                    log.success(getDeviceName() + " Released", 5);
+                } catch (JposException jposException) {
+                    log.failure(getDeviceName() + " Release failed " + jposException.getMessage(), 5, jposException);
+                }
             }
             try {
                 device.close();
@@ -81,7 +83,8 @@ public class DynamicDevice<DEVICE extends BaseJposControl> {
                 return false;
             }
             try {
-                if (!device.getClaimed()) {
+                // For claimless devices (e.g., Keylock), skip the claimed check
+                if (!deviceConnector.isSkipClaim() && !device.getClaimed()) {
                     return false;
                 }
                 int powerState = devicePower.getPowerState(device);
