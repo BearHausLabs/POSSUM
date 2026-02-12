@@ -70,6 +70,13 @@ public class POSKeyboardDevice implements DataListener, StatusUpdateListener {
         synchronized (keyboard = dynamicKeyboard.getDevice()) {
             try {
                 if (!keyboard.getDeviceEnabled()) {
+                    // Must set event types BEFORE enabling - tells the device to deliver key events
+                    try {
+                        keyboard.setEventTypes(POSKeyboardConst.KBD_ET_DOWN_UP);
+                        log.success("setEventTypes(KBD_ET_DOWN_UP)", 5);
+                    } catch (JposException jposException) {
+                        log.failure("Failed to set event types", 17, jposException);
+                    }
                     keyboard.setDeviceEnabled(true);
                     try {
                         keyboard.setDataEventEnabled(true);
@@ -137,6 +144,11 @@ public class POSKeyboardDevice implements DataListener, StatusUpdateListener {
         synchronized (keyboard = dynamicKeyboard.getDevice()) {
             try {
                 if (!keyboard.getDeviceEnabled()) {
+                    try {
+                        keyboard.setEventTypes(POSKeyboardConst.KBD_ET_DOWN_UP);
+                    } catch (JposException jposException) {
+                        log.failure("Failed to set event types on re-enable", 17, jposException);
+                    }
                     keyboard.setDeviceEnabled(true);
                     try {
                         keyboard.setDataEventEnabled(true);
