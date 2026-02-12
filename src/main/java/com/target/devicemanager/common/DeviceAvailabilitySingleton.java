@@ -6,6 +6,7 @@ import com.target.devicemanager.components.keylock.KeylockManager;
 import com.target.devicemanager.components.linedisplay.LineDisplayManager;
 import com.target.devicemanager.components.printer.PrinterManager;
 import com.target.devicemanager.components.scale.ScaleManager;
+import com.target.devicemanager.components.poskeyboard.POSKeyboardManager;
 import com.target.devicemanager.components.scanner.ScannerManager;
 
 public class DeviceAvailabilitySingleton {
@@ -21,6 +22,7 @@ public class DeviceAvailabilitySingleton {
     private PrinterManager printerManager = null;
     private ScaleManager scaleManager = null;
     private ScannerManager scannerManager = null;
+    private POSKeyboardManager posKeyboardManager = null;
 
     private DeviceAvailabilitySingleton() {
         // do nothing at the moment
@@ -81,4 +83,10 @@ public class DeviceAvailabilitySingleton {
     public void setScannerManager(ScannerManager scannerManager) {
         this.scannerManager = scannerManager;
     }
+
+    public POSKeyboardManager getPosKeyboardManager() {
+        return posKeyboardManager;
+    }
+
+    public void setPosKeyboardManager(POSKeyboardManager posKeyboardManager) { this.posKeyboardManager = posKeyboardManager; }
 }

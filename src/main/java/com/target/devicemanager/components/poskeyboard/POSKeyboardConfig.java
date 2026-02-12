@@ -1,0 +1,54 @@
+package com.target.devicemanager.components.poskeyboard;
+
+import com.target.devicemanager.common.*;
+import com.target.devicemanager.components.poskeyboard.simulator.SimulatedJposPOSKeyboard;
+import com.target.devicemanager.configuration.ApplicationConfig;
+import jpos.POSKeyboard;
+import jpos.config.JposEntryRegistry;
+import jpos.loader.JposServiceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import java.util.concurrent.Phaser;
+import java.util.concurrent.locks.ReentrantLock;
+
+@Configuration
+@Profile({"local", "dev", "prod"})
+class POSKeyboardConfig {
+    private final SimulatedJposPOSKeyboard simulatedPOSKeyboard;
+    private final ApplicationConfig applicationConfig;
+
+    @Autowired
+    POSKeyboardConfig(ApplicationConfig applicationConfig) {
+        this.applicationConfig = applicationConfig;
+        this.simulatedPOSKeyboard = new SimulatedJposPOSKeyboard();
+    }
+
+    @Bean
+    public POSKeyboardManager getPosKeyboardManager() {
+        DynamicDevice<? extends POSKeyboard> dynamicKeyboard;
+        JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        if (applicationConfig.IsSimulationMode()) {
+            dynamicKeyboard = new SimulatedDynamicDevice<>(simulatedPOSKeyboard, new DevicePower(), new DeviceConnector<>(simulatedPOSKeyboard, deviceRegistry));
+        } else {
+            POSKeyboard keyboard = new POSKeyboard();
+            dynamicKeyboard = new DynamicDevice<>(keyboard, new DevicePower(), new DeviceConnector<>(keyboard, deviceRegistry));
+        }
+
+        POSKeyboardManager posKeyboardManager = new POSKeyboardManager(
+                new POSKeyboardDevice(
+                        dynamicKeyboard,
+                        new POSKeyboardDeviceListener(new EventSynchronizer(new Phaser(1)))),
+                new ReentrantLock());
+
+        DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().setPosKeyboardManager(posKeyboardManager);
+        return posKeyboardManager;
+    }
+
+    @Bean
+    SimulatedJposPOSKeyboard getSimulatedPOSKeyboard() {
+        return simulatedPOSKeyboard;
+    }
+}

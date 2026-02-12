@@ -217,6 +217,13 @@ public class DeviceAvailabilityService {
                     log.failure("Failed to Connect to " + devName, 1, null);
                 }
                 break;
+            case "poskeyboard":
+                if(deviceAvailabilitySingleton.getPosKeyboardManager() != null) {
+                    healthStatus = deviceAvailabilitySingleton.getPosKeyboardManager().getStatus().getHealthStatus();
+                } else {
+                    log.failure("Failed to Connect to " + devName, 1, null);
+                }
+                break;
             default:
                 log.failure("Not a known device: " + devName, 1, null);
         }
@@ -270,6 +277,9 @@ public class DeviceAvailabilityService {
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getKeylockManager() != null) {
             responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getKeylockManager().getHealth());
+        }
+        if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getPosKeyboardManager() != null) {
+            responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getPosKeyboardManager().getHealth());
         }
         return ResponseEntity.ok(responseList);
     }
