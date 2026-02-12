@@ -9,6 +9,7 @@ import com.target.devicemanager.components.scale.ScaleManager;
 import com.target.devicemanager.components.msr.MSRManager;
 import com.target.devicemanager.components.poskeyboard.POSKeyboardManager;
 import com.target.devicemanager.components.scanner.ScannerManager;
+import com.target.devicemanager.components.toneindicator.ToneIndicatorManager;
 
 public class DeviceAvailabilitySingleton {
 
@@ -25,6 +26,7 @@ public class DeviceAvailabilitySingleton {
     private ScannerManager scannerManager = null;
     private POSKeyboardManager posKeyboardManager = null;
     private MSRManager msrManager = null;
+    private ToneIndicatorManager toneIndicatorManager = null;
 
     private DeviceAvailabilitySingleton() {
         // do nothing at the moment
@@ -97,4 +99,10 @@ public class DeviceAvailabilitySingleton {
     }
 
     public void setMsrManager(MSRManager msrManager) { this.msrManager = msrManager; }
+
+    public ToneIndicatorManager getToneIndicatorManager() {
+        return toneIndicatorManager;
+    }
+
+    public void setToneIndicatorManager(ToneIndicatorManager toneIndicatorManager) { this.toneIndicatorManager = toneIndicatorManager; }
 }

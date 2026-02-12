@@ -963,4 +963,14 @@
     <prop name="deviceBus" type="String" value="USB"/>
 </JposEntry>
 
+<JposEntry logicalName="ToneIndicator">
+    <creation factoryClass="com.ncr.retail.jpos.NCRJposServiceInstanceFactory" serviceClass="com.ncr.retail.jpos.services.toneindicator.ToneIndicatorService"/>
+    <vendor name="NCR" url="http://www.ncr.com"/>
+    <jpos category="ToneIndicator" version="1.14"/>
+    <product description="NCR Tone Indicator" name="NCR Tone Indicator" url="http://www.ncr.com"/>
+
+    <!--Device-specific properties - update deviceBus and vendor properties for your hardware-->
+    <prop name="deviceBus" type="String" value="USB"/>
+</JposEntry>
+
 </JposEntries>

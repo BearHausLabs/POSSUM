@@ -231,6 +231,13 @@ public class DeviceAvailabilityService {
                     log.failure("Failed to Connect to " + devName, 1, null);
                 }
                 break;
+            case "toneindicator":
+                if(deviceAvailabilitySingleton.getToneIndicatorManager() != null) {
+                    healthStatus = deviceAvailabilitySingleton.getToneIndicatorManager().getStatus().getHealthStatus();
+                } else {
+                    log.failure("Failed to Connect to " + devName, 1, null);
+                }
+                break;
             default:
                 log.failure("Not a known device: " + devName, 1, null);
         }
@@ -290,6 +297,9 @@ public class DeviceAvailabilityService {
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMsrManager() != null) {
             responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMsrManager().getHealth());
+        }
+        if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getToneIndicatorManager() != null) {
+            responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getToneIndicatorManager().getHealth());
         }
         return ResponseEntity.ok(responseList);
     }
