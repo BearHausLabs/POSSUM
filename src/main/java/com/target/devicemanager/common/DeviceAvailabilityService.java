@@ -210,6 +210,13 @@ public class DeviceAvailabilityService {
                     log.failure("Failed to Connect to " + devName, 1, null);
                 }
                 break;
+            case "keylock":
+                if(deviceAvailabilitySingleton.getKeylockManager() != null) {
+                    healthStatus = deviceAvailabilitySingleton.getKeylockManager().getStatus().getHealthStatus();
+                } else {
+                    log.failure("Failed to Connect to " + devName, 1, null);
+                }
+                break;
             default:
                 log.failure("Not a known device: " + devName, 1, null);
         }
@@ -260,6 +267,9 @@ public class DeviceAvailabilityService {
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getScannerManager() != null) {
                 responseList.addAll(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getScannerManager().getHealth(ScannerType.BOTH));
+        }
+        if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getKeylockManager() != null) {
+            responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getKeylockManager().getHealth());
         }
         return ResponseEntity.ok(responseList);
     }

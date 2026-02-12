@@ -2,6 +2,7 @@ package com.target.devicemanager.common;
 
 import com.target.devicemanager.components.cashdrawer.CashDrawerManager;
 import com.target.devicemanager.components.check.MicrManager;
+import com.target.devicemanager.components.keylock.KeylockManager;
 import com.target.devicemanager.components.linedisplay.LineDisplayManager;
 import com.target.devicemanager.components.printer.PrinterManager;
 import com.target.devicemanager.components.scale.ScaleManager;
@@ -14,6 +15,7 @@ public class DeviceAvailabilitySingleton {
      */
     private static final DeviceAvailabilitySingleton deviceAvailabilitySingleton = new DeviceAvailabilitySingleton();
     private CashDrawerManager cashDrawerManager = null;
+    private KeylockManager keylockManager = null;
     private MicrManager micrManager = null;
     private LineDisplayManager lineDisplayManager = null;
     private PrinterManager printerManager = null;
@@ -34,7 +36,11 @@ public class DeviceAvailabilitySingleton {
 
     public void setCashDrawerManager(CashDrawerManager cashDrawerManager) { this.cashDrawerManager = cashDrawerManager; }
 
+    public KeylockManager getKeylockManager() {
+        return keylockManager;
+    }
 
+    public void setKeylockManager(KeylockManager keylockManager) { this.keylockManager = keylockManager; }
 
 
 
