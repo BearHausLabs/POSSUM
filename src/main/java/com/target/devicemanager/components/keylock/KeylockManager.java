@@ -9,10 +9,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 
 @Profile({"local", "dev", "prod"})
@@ -26,6 +32,7 @@ public class KeylockManager {
     private final KeylockDevice keylockDevice;
     private final Lock keylockLock;
     private ConnectEnum connectStatus = ConnectEnum.FIRST_CONNECT;
+    private final List<SseEmitter> eventSubscribers = new CopyOnWriteArrayList<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(KeylockManager.class);
     private static final StructuredEventLogger log = StructuredEventLogger.of("Keylock", "KeylockManager", LOGGER);
 
@@ -46,6 +53,9 @@ public class KeylockManager {
         if(cacheManager != null) {
             this.cacheManager = cacheManager;
         }
+
+        // Register callback for real-time position change SSE broadcasting
+        this.keylockDevice.setPositionChangeCallback(this::onPositionChange);
     }
 
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
@@ -122,6 +132,46 @@ public class KeylockManager {
             }
         } catch (Exception exception) {
             return getHealth();
+        }
+    }
+
+    /**
+     * Callback invoked by KeylockDevice when the keylock position changes.
+     * Broadcasts the new position to all SSE subscribers.
+     */
+    private void onPositionChange(KeylockPosition position) {
+        log.success("Position change event: " + position + ", broadcasting to " + eventSubscribers.size() + " subscribers", 1);
+        List<SseEmitter> deadEmitters = new ArrayList<>();
+        for (SseEmitter emitter : eventSubscribers) {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("position")
+                        .data("{\"position\":\"" + position.name() + "\"}", MediaType.APPLICATION_JSON));
+            } catch (IOException ioException) {
+                deadEmitters.add(emitter);
+            }
+        }
+        eventSubscribers.removeAll(deadEmitters);
+    }
+
+    /**
+     * Adds an SSE emitter to the subscriber list for keylock position events.
+     * Sends the current position immediately upon subscription.
+     */
+    public void addEventSubscriber(SseEmitter emitter) {
+        emitter.onCompletion(() -> eventSubscribers.remove(emitter));
+        emitter.onTimeout(() -> eventSubscribers.remove(emitter));
+        eventSubscribers.add(emitter);
+        log.success("SSE subscriber added, total: " + eventSubscribers.size(), 5);
+
+        // Send current position immediately so the client gets initial state
+        try {
+            KeylockPosition currentPos = keylockDevice.getKeyPosition();
+            emitter.send(SseEmitter.event()
+                    .name("position")
+                    .data("{\"position\":\"" + currentPos.name() + "\"}", MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            log.failure("Failed to send initial position to SSE subscriber", 5, e);
         }
     }
 }

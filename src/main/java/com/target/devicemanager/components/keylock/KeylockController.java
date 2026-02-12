@@ -16,10 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/v1/keylock")
@@ -64,6 +66,21 @@ public class KeylockController {
             log.failureAPI("response", 13, url, deviceException.getDeviceError().toString(), statusCode, deviceException);
             throw deviceException;
         }
+    }
+
+    @Operation(description = "Subscribe to real-time keylock position changes via Server-Sent Events (SSE). " +
+            "Events are pushed as JSON objects containing the position field (LOCKED, NORMAL, SUPERVISOR, UNKNOWN).")
+    @GetMapping(path = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SSE stream opened")
+    })
+    public SseEmitter subscribeToKeylockEvents() {
+        String url = "/v1/keylock/events";
+        log.successAPI("request", 1, url, null, 0);
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        keylockManager.addEventSubscriber(emitter);
+        log.successAPI("response", 1, url, "SSE stream opened", 200);
+        return emitter;
     }
 
     @Operation(description = "Reconnects to the keylock device")
