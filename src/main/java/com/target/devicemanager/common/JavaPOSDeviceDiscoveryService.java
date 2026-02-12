@@ -239,7 +239,7 @@ public class JavaPOSDeviceDiscoveryService {
             case "CashDrawer":
                 return new CashDrawer();
             case "Scanner":
-                return new Scanner();
+                return new jpos.Scanner();
             case "Scale":
                 return new Scale();
             case "LineDisplay":
