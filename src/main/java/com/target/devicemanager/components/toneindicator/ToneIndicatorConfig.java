@@ -3,6 +3,7 @@ package com.target.devicemanager.components.toneindicator;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.toneindicator.simulator.SimulatedJposToneIndicator;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.ToneIndicator;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -19,10 +20,12 @@ import java.util.concurrent.locks.ReentrantLock;
 class ToneIndicatorConfig {
     private final SimulatedJposToneIndicator simulatedToneIndicator;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    ToneIndicatorConfig(ApplicationConfig applicationConfig) {
+    ToneIndicatorConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedToneIndicator = new SimulatedJposToneIndicator();
     }
 
@@ -30,11 +33,13 @@ class ToneIndicatorConfig {
     public ToneIndicatorManager getToneIndicatorManager() {
         DynamicDevice<? extends ToneIndicator> dynamicToneIndicator;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("toneIndicator");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
         if (applicationConfig.IsSimulationMode()) {
             dynamicToneIndicator = new SimulatedDynamicDevice<>(simulatedToneIndicator, new DevicePower(), new DeviceConnector<>(simulatedToneIndicator, deviceRegistry));
         } else {
             ToneIndicator toneIndicator = new ToneIndicator();
-            dynamicToneIndicator = new DynamicDevice<>(toneIndicator, new DevicePower(), new DeviceConnector<>(toneIndicator, deviceRegistry));
+            dynamicToneIndicator = new DynamicDevice<>(toneIndicator, new DevicePower(), new DeviceConnector<>(toneIndicator, deviceRegistry, null, preferred, autoAdapt));
         }
 
         ToneIndicatorManager toneIndicatorManager = new ToneIndicatorManager(

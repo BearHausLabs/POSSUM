@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: build-verify
     content: Build and verify no TypeScript/lint errors
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

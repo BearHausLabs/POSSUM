@@ -3,6 +3,7 @@ package com.target.devicemanager.components.keylock;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.keylock.simulator.SimulatedJposKeylock;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.Keylock;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -19,10 +20,12 @@ import java.util.concurrent.locks.ReentrantLock;
 class KeylockConfig {
     private final SimulatedJposKeylock simulatedKeylock;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    KeylockConfig(ApplicationConfig applicationConfig) {
+    KeylockConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedKeylock = new SimulatedJposKeylock();
     }
 
@@ -30,12 +33,14 @@ class KeylockConfig {
     public KeylockManager getKeylockManager() {
         DynamicDevice<? extends Keylock> dynamicKeylock;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("keylock");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
         if (applicationConfig.IsSimulationMode()) {
             dynamicKeylock = new SimulatedDynamicDevice<>(simulatedKeylock, new DevicePower(), new DeviceConnector<>(simulatedKeylock, deviceRegistry));
 
         } else {
             Keylock keylock = new Keylock();
-            dynamicKeylock = new DynamicDevice<>(keylock, new DevicePower(), new DeviceConnector<>(keylock, deviceRegistry));
+            dynamicKeylock = new DynamicDevice<>(keylock, new DevicePower(), new DeviceConnector<>(keylock, deviceRegistry, null, preferred, autoAdapt));
         }
 
         KeylockManager keylockManager = new KeylockManager(

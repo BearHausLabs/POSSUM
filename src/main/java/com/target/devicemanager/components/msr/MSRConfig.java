@@ -3,6 +3,7 @@ package com.target.devicemanager.components.msr;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.msr.simulator.SimulatedJposMSR;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.MSR;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -17,10 +18,12 @@ import java.util.concurrent.locks.ReentrantLock;
 class MSRConfig {
     private final SimulatedJposMSR simulatedMSR;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    MSRConfig(ApplicationConfig applicationConfig) {
+    MSRConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedMSR = new SimulatedJposMSR();
     }
 
@@ -28,12 +31,14 @@ class MSRConfig {
     public MSRManager getMSRManager() {
         DynamicDevice<? extends MSR> dynamicMSR;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("msr");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {
             dynamicMSR = new SimulatedDynamicDevice<>(simulatedMSR, new DevicePower(), new DeviceConnector<>(simulatedMSR, deviceRegistry));
         } else {
             MSR msr = new MSR();
-            dynamicMSR = new DynamicDevice<>(msr, new DevicePower(), new DeviceConnector<>(msr, deviceRegistry));
+            dynamicMSR = new DynamicDevice<>(msr, new DevicePower(), new DeviceConnector<>(msr, deviceRegistry, null, preferred, autoAdapt));
         }
 
         MSRManager msrManager = new MSRManager(

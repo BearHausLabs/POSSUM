@@ -39,6 +39,16 @@ if not exist "%POSSUM_HOME%\logs" mkdir "%POSSUM_HOME%\logs"
 REM Log service startup
 echo [%DATE% %TIME%] URSA JavaPOS Middleware Service Starting... >> "%POSSUM_HOME%\logs\service-startup.log"
 
+REM Sync Toshiba jpos.xml to POSSUM devcon.xml
+REM DevCat auto-configures jpos.xml with current device entries; POSSUM reads devcon.xml
+if not exist "%POSSUM_HOME%\config" mkdir "%POSSUM_HOME%\config"
+if exist "C:\POS\JavaPOS\jpos.xml" (
+    copy /Y "C:\POS\JavaPOS\jpos.xml" "%POSSUM_HOME%\config\devcon.xml" >nul
+    echo [%DATE% %TIME%] Synced jpos.xml to config\devcon.xml >> "%POSSUM_HOME%\logs\service-startup.log"
+) else (
+    echo [%DATE% %TIME%] WARNING: C:\POS\JavaPOS\jpos.xml not found, using existing devcon.xml >> "%POSSUM_HOME%\logs\service-startup.log"
+)
+
 REM Start Toshiba AIP daemons if not already running
 tasklist /FI "IMAGENAME eq aipctrld.exe" 2>nul | find /i "aipctrld.exe" >nul
 if errorlevel 1 (

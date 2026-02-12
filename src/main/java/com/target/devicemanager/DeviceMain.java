@@ -1,14 +1,20 @@
 package com.target.devicemanager;
 
+import com.target.devicemanager.common.JavaPOSDeviceDiscoveryService;
 import com.target.devicemanager.common.StructuredEventLogger;
+import com.target.devicemanager.common.entities.DeviceDiscoveryResponse;
+import com.target.devicemanager.common.entities.DeviceTestResult;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.util.JposPropertiesConst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.BufferedReader;
@@ -28,8 +34,18 @@ public class DeviceMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceMain.class);
     private static final StructuredEventLogger log = StructuredEventLogger.of("DeviceManager", "DeviceMain", LOGGER);
 
+    @Autowired(required = false)
+    private WorkstationConfig workstationConfig;
+
+    @Autowired(required = false)
+    private JavaPOSDeviceDiscoveryService discoveryService;
+
     public static void main(String[] args) {
-        System.setProperty(JposPropertiesConst.JPOS_POPULATOR_FILE_PROP_NAME, "devcon.xml");
+        // Respect -Djpos.config.populatorFile from the launch script if provided;
+        // default to "devcon.xml" on the classpath when not specified externally.
+        if (System.getProperty(JposPropertiesConst.JPOS_POPULATOR_FILE_PROP_NAME) == null) {
+            System.setProperty(JposPropertiesConst.JPOS_POPULATOR_FILE_PROP_NAME, "devcon.xml");
+        }
         System.setProperty("jpos.config.regPopulatorClass", "jpos.config.simple.xml.SimpleXmlRegPopulator");
         System.setProperty(JposPropertiesConst.JPOS_SERVICE_MANAGER_CLASS_PROP_NAME2, "jpos.loader.simple.SimpleServiceManager");
         System.setProperty("jpos.util.tracing.TurnOnAllNamedTracers", "OFF");
@@ -72,6 +88,39 @@ public class DeviceMain {
             } catch (Exception exception) {
                 log.failure("Error getting crash log file path", 17, exception);
             }
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(100) // Run after other startup listeners
+    public void startupDeviceDiscovery() {
+        if (workstationConfig != null && workstationConfig.isTestOnStartup() && discoveryService != null) {
+            Boolean isSimulationMode = Boolean.parseBoolean(System.getProperty("useSimulators"));
+            if (isSimulationMode) {
+                log.success("Simulation mode -- skipping startup device discovery tests", 5);
+                return;
+            }
+
+            log.success("=== Startup Device Discovery Test ===", 5);
+            try {
+                DeviceDiscoveryResponse response = discoveryService.testAllDevices();
+                if (response.getTestResults() != null) {
+                    int total = response.getTestResults().size();
+                    long functional = response.getTestResults().stream()
+                            .filter(DeviceTestResult::isFunctional).count();
+                    log.success("Discovery complete: " + functional + "/" + total +
+                            " devices functional", 5);
+                    for (DeviceTestResult result : response.getTestResults()) {
+                        String status = result.isFunctional() ? "OK" : "FAIL";
+                        log.success("  [" + status + "] " + result.getLogicalName() +
+                                " (" + result.getCategory() + ") - " +
+                                result.getMessage() + " [" + result.getTestDurationMs() + "ms]", 9);
+                    }
+                }
+            } catch (Exception e) {
+                log.failure("Startup device discovery failed: " + e.getMessage(), 1, e);
+            }
+            log.success("=== End Startup Device Discovery ===", 5);
         }
     }
 

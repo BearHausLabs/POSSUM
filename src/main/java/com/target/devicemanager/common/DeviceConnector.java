@@ -15,6 +15,8 @@ public class DeviceConnector<T extends BaseJposControl> {
     private final T device;
     private final AbstractMap.SimpleEntry<String, String> customFilter;
     private final JposEntryRegistry deviceRegistry;
+    private final String preferredLogicalName;
+    private final boolean autoAdapt;
     private String connectedDeviceName;
     private static final int CLAIM_TIMEOUT_IN_MSEC = 30000;
     private final int RETRY_REGISTRY_LOAD = 5;
@@ -23,10 +25,25 @@ public class DeviceConnector<T extends BaseJposControl> {
 
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry) {
-        this(device, deviceRegistry, null);
+        this(device, deviceRegistry, null, null, true);
     }
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry, AbstractMap.SimpleEntry<String, String> customFilter) {
+        this(device, deviceRegistry, customFilter, null, true);
+    }
+
+    /**
+     * Full constructor with explicit logical name from workstation config.
+     *
+     * @param device           The JPOS control object
+     * @param deviceRegistry   The JPOS entry registry (from devcon.xml)
+     * @param customFilter     Optional filter for device type (e.g., Flatbed vs HandScanner)
+     * @param preferredLogicalName  Explicit logical name from possum-config.yml (null = auto-discover)
+     * @param autoAdapt        If true and preferred name fails, fall back to auto-discovery
+     */
+    public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
+                           AbstractMap.SimpleEntry<String, String> customFilter,
+                           String preferredLogicalName, boolean autoAdapt) {
         if (device == null) {
             throw new IllegalArgumentException("device cannot be null");
         }
@@ -36,13 +53,33 @@ public class DeviceConnector<T extends BaseJposControl> {
         this.device = device;
         this.customFilter = customFilter;
         this.deviceRegistry = deviceRegistry;
+        this.preferredLogicalName = preferredLogicalName;
+        this.autoAdapt = autoAdapt;
         this.connectedDeviceName = getDefaultDeviceName();
     }
 
     boolean discoverConnectedDevice() {
+        // If an explicit logical name is configured, try it first
+        if (preferredLogicalName != null && !preferredLogicalName.isEmpty()) {
+            log.success("Trying preferred device name: '" + preferredLogicalName + "'", 9);
+            clearDeviceCache();
+            boolean isConnected = connect(preferredLogicalName);
+            if (isConnected) {
+                log.success("device found via preferred name '" + connectedDeviceName + "'", 9);
+                return true;
+            }
+            log.failure("preferred device '" + preferredLogicalName + "' not available", 1, null);
+            if (!autoAdapt) {
+                log.failure("autoAdapt is disabled, skipping auto-discovery", 1, null);
+                return false;
+            }
+            log.success("Falling back to auto-discovery...", 9);
+        }
+
+        // Auto-discover: try all matching logical names from the registry
         List<String> configNames = getLogicalNamesForDeviceType();
         for (String configName : configNames) {
-            clearDeviceCache(); //this clears any caches that exist (both datalogic and ncr have caches that need to get cleared)
+            clearDeviceCache();
             boolean isConnected = connect(configName);
             if (isConnected) {
                 log.success("device found '" + connectedDeviceName + "'", 9);

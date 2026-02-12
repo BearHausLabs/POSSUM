@@ -4,6 +4,7 @@ import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.scanner.entities.ScannerType;
 import com.target.devicemanager.components.scanner.simulator.SimulatedJposScanner;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.Scanner;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -21,16 +22,21 @@ import java.util.concurrent.locks.ReentrantLock;
 class ScannerConfig {
     private final SimulatedJposScanner simulatedScanner;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    ScannerConfig(ApplicationConfig applicationConfig) {
+    ScannerConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedScanner = new SimulatedJposScanner();
     }
 
     List<ScannerDevice> getScanners() {
         List<ScannerDevice> scanners = new ArrayList<>();
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
+        String preferredFlatbed = workstationConfig.getDeviceLogicalName("flatbedScanner");
+        String preferredHand = workstationConfig.getDeviceLogicalName("handScanner");
 
         if (applicationConfig.IsSimulationMode()) {
             scanners.add(new ScannerDevice(
@@ -41,13 +47,13 @@ class ScannerConfig {
             Scanner flatbedScanner = new Scanner();
             scanners.add(new ScannerDevice(
                     new ScannerDeviceListener(new EventSynchronizer(new Phaser(1))),
-                    new DynamicDevice<>(flatbedScanner, new DevicePower(), new DeviceConnector<>(flatbedScanner, deviceRegistry, new SimpleEntry<>("deviceType", "Flatbed"))),
+                    new DynamicDevice<>(flatbedScanner, new DevicePower(), new DeviceConnector<>(flatbedScanner, deviceRegistry, new SimpleEntry<>("deviceType", "Flatbed"), preferredFlatbed, autoAdapt)),
                     ScannerType.FLATBED, applicationConfig));
 
             Scanner handScanner = new Scanner();
             scanners.add(new ScannerDevice(
                     new ScannerDeviceListener(new EventSynchronizer(new Phaser(1))),
-                    new DynamicDevice<>(handScanner, new DevicePower(), new DeviceConnector<>(handScanner, deviceRegistry, new SimpleEntry<>("deviceType", "HandScanner"))),
+                    new DynamicDevice<>(handScanner, new DevicePower(), new DeviceConnector<>(handScanner, deviceRegistry, new SimpleEntry<>("deviceType", "HandScanner"), preferredHand, autoAdapt)),
                     ScannerType.HANDHELD, applicationConfig));
         }
 

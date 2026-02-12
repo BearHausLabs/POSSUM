@@ -3,6 +3,7 @@ package com.target.devicemanager.components.linedisplay;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.linedisplay.simulator.SimulatedJposLineDisplay;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.LineDisplay;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -17,10 +18,12 @@ class LineDisplayConfig {
 
     private final SimulatedJposLineDisplay simulatedLineDisplay;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    LineDisplayConfig(ApplicationConfig applicationConfig) {
+    LineDisplayConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedLineDisplay = new SimulatedJposLineDisplay();
     }
 
@@ -28,12 +31,14 @@ class LineDisplayConfig {
     public LineDisplayManager getLineDisplayManager() {
         DynamicDevice<LineDisplay> dynamicLineDisplay;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("lineDisplay");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {
             dynamicLineDisplay = new DynamicDevice<>(simulatedLineDisplay, new DevicePower(), new DeviceConnector<>(simulatedLineDisplay, deviceRegistry));
         } else {
             LineDisplay lineDisplay = new LineDisplay();
-            dynamicLineDisplay = new DynamicDevice<>(lineDisplay, new DevicePower(), new DeviceConnector<>(lineDisplay, deviceRegistry ));
+            dynamicLineDisplay = new DynamicDevice<>(lineDisplay, new DevicePower(), new DeviceConnector<>(lineDisplay, deviceRegistry, null, preferred, autoAdapt));
         }
 
         LineDisplayManager lineDisplayManager = new LineDisplayManager(

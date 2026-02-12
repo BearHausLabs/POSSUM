@@ -6,6 +6,7 @@ import com.target.devicemanager.common.DevicePower;
 import com.target.devicemanager.common.DynamicDevice;
 import com.target.devicemanager.components.check.simulator.SimulatedJposMicr;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.MICR;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -18,11 +19,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Configuration
 class MicrConfig {
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
     private final SimulatedJposMicr simulatedMicr;
 
     @Autowired
-    MicrConfig(ApplicationConfig applicationConfig) {
+    MicrConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedMicr = new SimulatedJposMicr();
     }
 
@@ -30,12 +33,14 @@ class MicrConfig {
     public MicrManager getMicrManager() {
         DynamicDevice<? extends MICR> dynamicMicr;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("micr");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {
             dynamicMicr = new DynamicDevice<>(simulatedMicr, new DevicePower(), new DeviceConnector<>(simulatedMicr, deviceRegistry));
         } else {
             MICR micr = new MICR();
-            dynamicMicr = new DynamicDevice<>(micr, new DevicePower(), new DeviceConnector<>(micr, deviceRegistry));
+            dynamicMicr = new DynamicDevice<>(micr, new DevicePower(), new DeviceConnector<>(micr, deviceRegistry, null, preferred, autoAdapt));
         }
 
         MicrManager micrManager = new MicrManager(

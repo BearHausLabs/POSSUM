@@ -1,0 +1,48 @@
+# ============================================================================
+# POSSUM Workstation Configuration
+# ============================================================================
+#
+# This file provides explicit device-to-logical-name mappings for this
+# workstation. When a device mapping is set, POSSUM connects directly to
+# that logical name instead of auto-discovering from devcon.xml.
+#
+# Set a device to null to use auto-discovery for that device type.
+#
+# Override location:
+#   --spring.config.additional-location=file:/path/to/possum-config.yml
+#
+# Generate from discovered devices:
+#   POST http://localhost:8080/v1/discovery/generate-config
+# ============================================================================
+
+possum:
+  store:
+    id: "store-001"
+    name: "Default Store"
+  workstation:
+    id: "lane-1"
+    name: "Lane 1"
+
+  # Explicit device logical name mappings from devcon.xml.
+  # Set to null to use auto-discovery for that device type.
+  devices:
+    printer: null
+    cashDrawer: null
+    flatbedScanner: null
+    handScanner: null
+    scale: null
+    lineDisplay: null
+    micr: null
+    keylock: null
+    posKeyboard: null
+    msr: null
+    toneIndicator: null
+
+  # Discovery settings
+  discovery:
+    # Enable discovery REST endpoints (/v1/discovery/*)
+    enabled: true
+    # Run device connectivity tests on startup and log results
+    testOnStartup: false
+    # If a configured device fails, fall back to auto-discovery
+    autoAdapt: true

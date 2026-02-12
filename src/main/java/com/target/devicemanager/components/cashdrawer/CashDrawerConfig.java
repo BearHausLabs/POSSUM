@@ -3,6 +3,7 @@ package com.target.devicemanager.components.cashdrawer;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.cashdrawer.simulator.SimulatedJposCashDrawer;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.CashDrawer;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -19,10 +20,12 @@ import java.util.concurrent.locks.ReentrantLock;
 class CashDrawerConfig {
     private final SimulatedJposCashDrawer simulatedCashDrawer;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    CashDrawerConfig(ApplicationConfig applicationConfig) {
+    CashDrawerConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedCashDrawer = new SimulatedJposCashDrawer();
     }
 
@@ -30,12 +33,14 @@ class CashDrawerConfig {
     public CashDrawerManager getCashDrawerManager() {
         DynamicDevice<? extends CashDrawer> dynamicCashDrawer;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("cashDrawer");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
         if (applicationConfig.IsSimulationMode()) {
             dynamicCashDrawer = new SimulatedDynamicDevice<>(simulatedCashDrawer, new DevicePower(), new DeviceConnector<>(simulatedCashDrawer, deviceRegistry));
 
         } else {
             CashDrawer cashDrawer = new CashDrawer();
-            dynamicCashDrawer = new DynamicDevice<>(cashDrawer, new DevicePower(), new DeviceConnector<>(cashDrawer, deviceRegistry));
+            dynamicCashDrawer = new DynamicDevice<>(cashDrawer, new DevicePower(), new DeviceConnector<>(cashDrawer, deviceRegistry, null, preferred, autoAdapt));
         }
 
         CashDrawerManager cashDrawerManager = new CashDrawerManager(

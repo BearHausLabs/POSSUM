@@ -3,6 +3,7 @@ package com.target.devicemanager.components.poskeyboard;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.poskeyboard.simulator.SimulatedJposPOSKeyboard;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 import jpos.POSKeyboard;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
@@ -19,10 +20,12 @@ import java.util.concurrent.locks.ReentrantLock;
 class POSKeyboardConfig {
     private final SimulatedJposPOSKeyboard simulatedPOSKeyboard;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    POSKeyboardConfig(ApplicationConfig applicationConfig) {
+    POSKeyboardConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedPOSKeyboard = new SimulatedJposPOSKeyboard();
     }
 
@@ -30,11 +33,13 @@ class POSKeyboardConfig {
     public POSKeyboardManager getPosKeyboardManager() {
         DynamicDevice<? extends POSKeyboard> dynamicKeyboard;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("posKeyboard");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
         if (applicationConfig.IsSimulationMode()) {
             dynamicKeyboard = new SimulatedDynamicDevice<>(simulatedPOSKeyboard, new DevicePower(), new DeviceConnector<>(simulatedPOSKeyboard, deviceRegistry));
         } else {
             POSKeyboard keyboard = new POSKeyboard();
-            dynamicKeyboard = new DynamicDevice<>(keyboard, new DevicePower(), new DeviceConnector<>(keyboard, deviceRegistry));
+            dynamicKeyboard = new DynamicDevice<>(keyboard, new DevicePower(), new DeviceConnector<>(keyboard, deviceRegistry, null, preferred, autoAdapt));
         }
 
         POSKeyboardManager posKeyboardManager = new POSKeyboardManager(

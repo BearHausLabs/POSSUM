@@ -131,6 +131,28 @@ mkdir -p $POSSUM_LOG_PATH/CrashLog
 
 echo ""
 echo "################################"
+echo "Syncing JavaPOS config..."
+echo "################################"
+echo ""
+
+# Sync jpos.xml to devcon.xml if a master jpos.xml exists
+# On Toshiba registers, DevCat maintains jpos.xml; POSSUM reads devcon.xml
+JPOS_XML=""
+if [ -f "/opt/target/possum/jpos.xml" ]; then
+    JPOS_XML="/opt/target/possum/jpos.xml"
+elif [ -f "/usr/local/Datalogic/JavaPOS/jpos.xml" ]; then
+    JPOS_XML="/usr/local/Datalogic/JavaPOS/jpos.xml"
+fi
+
+if [ -n "$JPOS_XML" ]; then
+    cp "$JPOS_XML" /opt/target/possum/devcon.xml
+    echo "Synced $JPOS_XML -> /opt/target/possum/devcon.xml"
+else
+    echo "No master jpos.xml found, using existing devcon.xml"
+fi
+
+echo ""
+echo "################################"
 echo "Starting Possum..."
 echo "################################"
 echo ""

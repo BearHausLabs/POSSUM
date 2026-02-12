@@ -3,6 +3,7 @@ package com.target.devicemanager.components.scale;
 import com.target.devicemanager.common.*;
 import com.target.devicemanager.components.scale.simulator.SimulatedJposScale;
 import com.target.devicemanager.configuration.ApplicationConfig;
+import com.target.devicemanager.configuration.WorkstationConfig;
 
 import jpos.config.JposEntryRegistry;
 import jpos.Scale;
@@ -18,10 +19,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 class ScaleConfig {
     private final SimulatedJposScale simulatedJposScale;
     private final ApplicationConfig applicationConfig;
+    private final WorkstationConfig workstationConfig;
 
     @Autowired
-    ScaleConfig(ApplicationConfig applicationConfig) {
+    ScaleConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
         this.applicationConfig = applicationConfig;
+        this.workstationConfig = workstationConfig;
         this.simulatedJposScale = new SimulatedJposScale();
     }
 
@@ -29,12 +32,14 @@ class ScaleConfig {
     public ScaleManager getScaleManager() {
         DynamicDevice<Scale> dynamicScale;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
+        String preferred = workstationConfig.getDeviceLogicalName("scale");
+        boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {
             dynamicScale = new SimulatedDynamicDevice<>(simulatedJposScale, new DevicePower(), new DeviceConnector<>(simulatedJposScale, deviceRegistry));
         } else {
             Scale scale = new Scale();
-            dynamicScale = new DynamicDevice<>(scale, new DevicePower(), new DeviceConnector<>(scale, deviceRegistry ));
+            dynamicScale = new DynamicDevice<>(scale, new DevicePower(), new DeviceConnector<>(scale, deviceRegistry, null, preferred, autoAdapt));
         }
 
         ScaleManager scaleManager = new ScaleManager(
