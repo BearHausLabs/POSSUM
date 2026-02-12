@@ -39,7 +39,7 @@ class POSKeyboardConfig {
             dynamicKeyboard = new SimulatedDynamicDevice<>(simulatedPOSKeyboard, new DevicePower(), new DeviceConnector<>(simulatedPOSKeyboard, deviceRegistry));
         } else {
             POSKeyboard keyboard = new POSKeyboard();
-            dynamicKeyboard = new DynamicDevice<>(keyboard, new DevicePower(), new DeviceConnector<>(keyboard, deviceRegistry, null, preferred, autoAdapt));
+            dynamicKeyboard = new DynamicDevice<>(keyboard, new DevicePower(), new DeviceConnector<>(keyboard, deviceRegistry, null, preferred, autoAdapt, false, true));
         }
 
         POSKeyboardManager posKeyboardManager = new POSKeyboardManager(

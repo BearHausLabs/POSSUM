@@ -18,6 +18,7 @@ public class DeviceConnector<T extends BaseJposControl> {
     private final String preferredLogicalName;
     private final boolean autoAdapt;
     private final boolean skipClaim;
+    private final boolean skipTestCycle;
     private String connectedDeviceName;
     private static final int CLAIM_TIMEOUT_IN_MSEC = 30000;
     private final int RETRY_REGISTRY_LOAD = 5;
@@ -26,17 +27,23 @@ public class DeviceConnector<T extends BaseJposControl> {
 
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry) {
-        this(device, deviceRegistry, null, null, true, false);
+        this(device, deviceRegistry, null, null, true, false, false);
     }
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry, AbstractMap.SimpleEntry<String, String> customFilter) {
-        this(device, deviceRegistry, customFilter, null, true, false);
+        this(device, deviceRegistry, customFilter, null, true, false, false);
     }
 
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
                            AbstractMap.SimpleEntry<String, String> customFilter,
                            String preferredLogicalName, boolean autoAdapt) {
-        this(device, deviceRegistry, customFilter, preferredLogicalName, autoAdapt, false);
+        this(device, deviceRegistry, customFilter, preferredLogicalName, autoAdapt, false, false);
+    }
+
+    public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
+                           AbstractMap.SimpleEntry<String, String> customFilter,
+                           String preferredLogicalName, boolean autoAdapt, boolean skipClaim) {
+        this(device, deviceRegistry, customFilter, preferredLogicalName, autoAdapt, skipClaim, false);
     }
 
     /**
@@ -48,10 +55,13 @@ public class DeviceConnector<T extends BaseJposControl> {
      * @param preferredLogicalName  Explicit logical name from possum-config.yml (null = auto-discover)
      * @param autoAdapt        If true and preferred name fails, fall back to auto-discovery
      * @param skipClaim        If true, skip claim/release for shared devices (e.g., Keylock)
+     * @param skipTestCycle    If true, skip the test enable/disable cycle (e.g., POSKeyboard needs
+     *                         setEventTypes before first enable)
      */
     public DeviceConnector(T device, JposEntryRegistry deviceRegistry,
                            AbstractMap.SimpleEntry<String, String> customFilter,
-                           String preferredLogicalName, boolean autoAdapt, boolean skipClaim) {
+                           String preferredLogicalName, boolean autoAdapt,
+                           boolean skipClaim, boolean skipTestCycle) {
         if (device == null) {
             throw new IllegalArgumentException("device cannot be null");
         }
@@ -64,6 +74,7 @@ public class DeviceConnector<T extends BaseJposControl> {
         this.preferredLogicalName = preferredLogicalName;
         this.autoAdapt = autoAdapt;
         this.skipClaim = skipClaim;
+        this.skipTestCycle = skipTestCycle;
         this.connectedDeviceName = getDefaultDeviceName();
     }
 
@@ -144,19 +155,21 @@ public class DeviceConnector<T extends BaseJposControl> {
                         return false;
                     }
                 }
-                //this is a test, some devices wont signal connected status until enabled
-                //then disable to put it back in the same state
-                try {
-                    device.setDeviceEnabled(true);
-                } catch (JposException jposException){
-                    log.failure("failed to enable " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
-                    return false;
-                }
-                try {
-                    device.setDeviceEnabled(false);
-                } catch (JposException jposException){
-                    log.failure("failed to disable " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
-                    return false;
+                if (!skipTestCycle) {
+                    //this is a test, some devices wont signal connected status until enabled
+                    //then disable to put it back in the same state
+                    try {
+                        device.setDeviceEnabled(true);
+                    } catch (JposException jposException){
+                        log.failure("failed to enable " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
+                        return false;
+                    }
+                    try {
+                        device.setDeviceEnabled(false);
+                    } catch (JposException jposException){
+                        log.failure("failed to disable " + configName + " with error " + jposException.getErrorCode(), 17, jposException);
+                        return false;
+                    }
                 }
                 this.connectedDeviceName = configName;
                 log.success("successfully connected " + configName + (skipClaim ? " (claimless)" : ""), 9);
