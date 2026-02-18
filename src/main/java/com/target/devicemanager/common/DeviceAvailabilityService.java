@@ -271,7 +271,7 @@ public class DeviceAvailabilityService {
             return ResponseEntity.ok(responseList);
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getCashDrawerManager() != null) {
-            responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getCashDrawerManager().getHealth());
+            responseList.addAll(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getCashDrawerManager().getAllHealth());
         }
         if(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMicrManager() != null) {
             responseList.add(DeviceAvailabilitySingleton.getDeviceAvailabilitySingleton().getMicrManager().getHealth());
