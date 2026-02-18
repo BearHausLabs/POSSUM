@@ -6,6 +6,7 @@ import com.target.devicemanager.components.printer.simulator.SimulatedCheckPrint
 import com.target.devicemanager.components.printer.simulator.SimulatedJposPrinter;
 import com.target.devicemanager.configuration.ApplicationConfig;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/v1/simulate")
 @Tag(name = "Check")
+@ConditionalOnProperty(name = "possum.device.micr.enabled", havingValue = "true")
 public class MicrSimulatorController {
     private final SimulatedJposPrinter simulatedJposPrinter;
     private final ApplicationConfig applicationConfig;

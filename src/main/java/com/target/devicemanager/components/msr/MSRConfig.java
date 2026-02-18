@@ -8,22 +8,27 @@ import jpos.MSR;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
+@ConditionalOnProperty(name = "possum.device.msr.enabled", havingValue = "true")
 class MSRConfig {
     private final SimulatedJposMSR simulatedMSR;
     private final ApplicationConfig applicationConfig;
     private final WorkstationConfig workstationConfig;
+    private final Environment environment;
 
     @Autowired
-    MSRConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
+    MSRConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig, Environment environment) {
         this.applicationConfig = applicationConfig;
         this.workstationConfig = workstationConfig;
+        this.environment = environment;
         this.simulatedMSR = new SimulatedJposMSR();
     }
 
@@ -31,7 +36,10 @@ class MSRConfig {
     public MSRManager getMSRManager() {
         DynamicDevice<? extends MSR> dynamicMSR;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
-        String preferred = workstationConfig.getDeviceLogicalName("msr");
+        String preferred = environment.getProperty("possum.device.msr.logicalName");
+        if (preferred == null) {
+            preferred = workstationConfig.getDeviceLogicalName("msr");
+        }
         boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {

@@ -3,6 +3,7 @@ package com.target.devicemanager.components.keylock.simulator;
 import com.target.devicemanager.common.SimulatorState;
 import com.target.devicemanager.configuration.ApplicationConfig;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/v1/simulate")
 @Tag(name = "Keylock")
 @Profile("local")
+@ConditionalOnProperty(name = "possum.device.keylock.enabled", havingValue = "true")
 public class KeylockSimulatorController {
     private final SimulatedJposKeylock simulatedJposKeylock;
     private final ApplicationConfig applicationConfig;

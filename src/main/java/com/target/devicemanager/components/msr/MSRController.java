@@ -15,12 +15,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/v1")
 @Tag(name = "MSR")
+@ConditionalOnProperty(name = "possum.device.msr.enabled", havingValue = "true")
 public class MSRController {
 
     private final MSRManager msrManager;

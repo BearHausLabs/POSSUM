@@ -8,24 +8,30 @@ import jpos.ToneIndicator;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 
 import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
 @Profile({"local", "dev", "prod"})
+@ConditionalOnProperty(name = "possum.device.toneIndicator.enabled", havingValue = "true")
 class ToneIndicatorConfig {
     private final SimulatedJposToneIndicator simulatedToneIndicator;
     private final ApplicationConfig applicationConfig;
     private final WorkstationConfig workstationConfig;
+    private final Environment environment;
 
     @Autowired
-    ToneIndicatorConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
+    ToneIndicatorConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig,
+                        Environment environment) {
         this.applicationConfig = applicationConfig;
         this.workstationConfig = workstationConfig;
+        this.environment = environment;
         this.simulatedToneIndicator = new SimulatedJposToneIndicator();
     }
 
@@ -33,7 +39,10 @@ class ToneIndicatorConfig {
     public ToneIndicatorManager getToneIndicatorManager() {
         DynamicDevice<? extends ToneIndicator> dynamicToneIndicator;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
-        String preferred = workstationConfig.getDeviceLogicalName("toneIndicator");
+        String preferred = environment.getProperty("possum.device.toneIndicator.logicalName");
+        if (preferred == null) {
+            preferred = workstationConfig.getDeviceLogicalName("toneIndicator");
+        }
         boolean autoAdapt = workstationConfig.isAutoAdapt();
         if (applicationConfig.IsSimulationMode()) {
             dynamicToneIndicator = new SimulatedDynamicDevice<>(simulatedToneIndicator, new DevicePower(), new DeviceConnector<>(simulatedToneIndicator, deviceRegistry));

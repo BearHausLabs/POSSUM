@@ -38,6 +38,12 @@ possum:
     msr: null
     toneIndicator: null
 
+  # PostgREST connection for DB-driven device configuration.
+  # URSA manages the device_config table; POSSUM reads it at startup.
+  postgrest:
+    url: "http://localhost:3000"
+    table: "device_config"
+
   # Discovery settings
   discovery:
     # Enable discovery REST endpoints (/v1/discovery/*)

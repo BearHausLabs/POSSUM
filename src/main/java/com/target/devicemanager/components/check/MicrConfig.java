@@ -11,29 +11,37 @@ import jpos.MICR;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Configuration
+@ConditionalOnProperty(name = "possum.device.micr.enabled", havingValue = "true")
 class MicrConfig {
     private final ApplicationConfig applicationConfig;
     private final WorkstationConfig workstationConfig;
     private final SimulatedJposMicr simulatedMicr;
+    private final Environment environment;
 
     @Autowired
-    MicrConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
+    MicrConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig, Environment environment) {
         this.applicationConfig = applicationConfig;
         this.workstationConfig = workstationConfig;
         this.simulatedMicr = new SimulatedJposMicr();
+        this.environment = environment;
     }
 
     @Bean
     public MicrManager getMicrManager() {
         DynamicDevice<? extends MICR> dynamicMicr;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
-        String preferred = workstationConfig.getDeviceLogicalName("micr");
+        String preferred = environment.getProperty("possum.device.micr.logicalName");
+        if (preferred == null) {
+            preferred = workstationConfig.getDeviceLogicalName("micr");
+        }
         boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {

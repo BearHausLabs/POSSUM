@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,8 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/v1")
 @Tag(name = "Scanner")
+@ConditionalOnExpression(
+        "'${possum.device.flatbedScanner.enabled:false}' == 'true' or '${possum.device.handScanner.enabled:false}' == 'true'")
 public class ScannerController {
 
     private final ScannerManager scannerManager;

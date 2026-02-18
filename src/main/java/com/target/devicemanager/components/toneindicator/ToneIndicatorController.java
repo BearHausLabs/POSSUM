@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/toneindicator")
 @Tag(name = "Tone Indicator")
 @Profile({"local", "dev", "prod"})
+@ConditionalOnProperty(name = "possum.device.toneIndicator.enabled", havingValue = "true")
 public class ToneIndicatorController {
 
     private final ToneIndicatorManager toneIndicatorManager;

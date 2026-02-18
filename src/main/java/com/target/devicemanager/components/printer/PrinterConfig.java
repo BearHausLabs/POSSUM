@@ -8,31 +8,39 @@ import jpos.POSPrinter;
 import jpos.config.JposEntryRegistry;
 import jpos.loader.JposServiceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
+@ConditionalOnProperty(name = "possum.device.printer.enabled", havingValue = "true")
 class PrinterConfig {
     private final SimulatedJposPrinter simulatedPrinter;
     private final ApplicationConfig applicationConfig;
     private final WorkstationConfig workstationConfig;
+    private final Environment environment;
 
     @Autowired
-    PrinterConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
+    PrinterConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig, Environment environment) {
 
         this.simulatedPrinter = new SimulatedJposPrinter();
         this.applicationConfig = applicationConfig;
         this.workstationConfig = workstationConfig;
+        this.environment = environment;
     }
 
     @Bean
     public PrinterManager getReceiptPrinterManager() {
         DynamicDevice<? extends POSPrinter> dynamicPrinter;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
-        String preferred = workstationConfig.getDeviceLogicalName("printer");
+        String preferred = environment.getProperty("possum.device.printer.logicalName");
+        if (preferred == null) {
+            preferred = workstationConfig.getDeviceLogicalName("printer");
+        }
         boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {

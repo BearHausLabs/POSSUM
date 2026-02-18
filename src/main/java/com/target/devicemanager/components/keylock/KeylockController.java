@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/v1/keylock")
 @Tag(name = "Keylock")
 @Profile({"local", "dev", "prod"})
+@ConditionalOnProperty(name = "possum.device.keylock.enabled", havingValue = "true")
 public class KeylockController {
 
     private final KeylockManager keylockManager;

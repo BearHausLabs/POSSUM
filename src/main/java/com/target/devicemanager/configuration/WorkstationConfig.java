@@ -20,6 +20,7 @@ public class WorkstationConfig {
     private WorkstationInfo workstation;
     private DeviceMappings devices;
     private DiscoverySettings discovery;
+    private PostgrestConfig postgrest;
 
     // ---- Getters and Setters ----
 
@@ -53,6 +54,14 @@ public class WorkstationConfig {
 
     public void setDiscovery(DiscoverySettings discovery) {
         this.discovery = discovery;
+    }
+
+    public PostgrestConfig getPostgrest() {
+        return postgrest;
+    }
+
+    public void setPostgrest(PostgrestConfig postgrest) {
+        this.postgrest = postgrest;
     }
 
     // ---- Helper methods ----
@@ -147,6 +156,16 @@ public class WorkstationConfig {
         public void setMsr(String msr) { this.msr = msr; }
         public String getToneIndicator() { return toneIndicator; }
         public void setToneIndicator(String toneIndicator) { this.toneIndicator = toneIndicator; }
+    }
+
+    public static class PostgrestConfig {
+        private String url;
+        private String table = "device_config";
+
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+        public String getTable() { return table; }
+        public void setTable(String table) { this.table = table; }
     }
 
     public static class DiscoverySettings {

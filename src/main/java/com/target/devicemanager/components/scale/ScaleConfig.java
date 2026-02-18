@@ -10,21 +10,26 @@ import jpos.Scale;
 import jpos.loader.JposServiceLoader;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Configuration
+@ConditionalOnProperty(name = "possum.device.scale.enabled", havingValue = "true")
 class ScaleConfig {
     private final SimulatedJposScale simulatedJposScale;
     private final ApplicationConfig applicationConfig;
     private final WorkstationConfig workstationConfig;
+    private final Environment environment;
 
     @Autowired
-    ScaleConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig) {
+    ScaleConfig(ApplicationConfig applicationConfig, WorkstationConfig workstationConfig, Environment environment) {
         this.applicationConfig = applicationConfig;
         this.workstationConfig = workstationConfig;
+        this.environment = environment;
         this.simulatedJposScale = new SimulatedJposScale();
     }
 
@@ -32,7 +37,10 @@ class ScaleConfig {
     public ScaleManager getScaleManager() {
         DynamicDevice<Scale> dynamicScale;
         JposEntryRegistry deviceRegistry = JposServiceLoader.getManager().getEntryRegistry();
-        String preferred = workstationConfig.getDeviceLogicalName("scale");
+        String preferred = environment.getProperty("possum.device.scale.logicalName");
+        if (preferred == null) {
+            preferred = workstationConfig.getDeviceLogicalName("scale");
+        }
         boolean autoAdapt = workstationConfig.isAutoAdapt();
 
         if (applicationConfig.IsSimulationMode()) {

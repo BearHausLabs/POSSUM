@@ -8,6 +8,7 @@ import com.target.devicemanager.configuration.ApplicationConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/v1/simulate")
 @Tag(name = "Scanner")
+@ConditionalOnExpression(
+        "'${possum.device.flatbedScanner.enabled:false}' == 'true' or '${possum.device.handScanner.enabled:false}' == 'true'")
 public class ScanSimulatorController {
     private final SimulatedJposScanner simulatedJposScanner;
     private final ApplicationConfig applicationConfig;

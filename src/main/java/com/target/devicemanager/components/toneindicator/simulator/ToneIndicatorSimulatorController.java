@@ -4,6 +4,7 @@ import com.target.devicemanager.common.SimulatorState;
 import com.target.devicemanager.configuration.ApplicationConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/v1/simulate")
 @Tag(name = "Tone Indicator")
 @Profile("local")
+@ConditionalOnProperty(name = "possum.device.toneIndicator.enabled", havingValue = "true")
 public class ToneIndicatorSimulatorController {
     private final SimulatedJposToneIndicator simulatedJposToneIndicator;
     private final ApplicationConfig applicationConfig;
